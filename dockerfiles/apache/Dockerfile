@@ -54,6 +54,9 @@ COPY ./scripts/entrypoint.sh /usr/local/bin/entrypoint.sh
 	
 RUN chmod +x /usr/local/bin/entrypoint.sh
 
+RUN sed -i 's|/var/www/html|/var/www/html/public|g' /etc/apache2/sites-available/000-default.conf \
+    && sed -i 's|/var/www/html|/var/www/html/public|g' /etc/apache2/apache2.conf
+
 ENTRYPOINT ["/usr/local/bin/entrypoint.sh"]
 CMD [ "/usr/sbin/apache2ctl", "-D", "FOREGROUND"]
 
