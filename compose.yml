@@ -1,8 +1,8 @@
 services:
   moodleserver:
     build:
-      context: ./dockerfiles/apache
-      dockerfile: Dockerfile
+      context: .
+      dockerfile: ./dockerfiles/apache/Dockerfile
     restart: unless-stopped
     environment:
       - MOODLE_URL=${MOODLE_URL}
