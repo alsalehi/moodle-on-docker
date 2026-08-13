@@ -56,6 +56,8 @@ services:
       - MYSQL_PASSWORD=${DB_PASSWORD}
     volumes:
       - database_mariadb_data:/var/lib/mysql
+    networks:
+      - moodleserver-network
 
 volumes:
   database_mariadb_data:
