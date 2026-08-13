@@ -2,7 +2,7 @@
 # Forked from Jonathan Hardison's <jmh@jonathanhardison.com> docker version. https://github.com/jmhardison/docker-moodle
 #Original Maintainer Jon Auer <jda@coldshore.com>
 
-ARG PHP_VERSION="7.4"
+ARG PHP_VERSION="8.4"
 FROM  php:${PHP_VERSION}-apache AS base
 
 # Replace for later version
@@ -24,7 +24,7 @@ ENV DEBIAN_FRONTEND=noninteractive \
 RUN php -i | grep extension_dir  | cut -d " " -f 5
 
 RUN --mount=type=bind,from=mlocati/php-extension-installer:latest,source=/usr/bin/install-php-extensions,target=/usr/local/bin/install-php-extensions \
-	/usr/local/bin/install-php-extensions xmlrpc mbstring zip xml intl soap gd opcache &&\
+	/usr/local/bin/install-php-extensions xmlrpc mbstring zip xml intl soap gd opcache memcached &&\
 	echo "PHP_EXTENTION_DIR="$(php -i | grep extension_dir  | cut -d " " -f 5) >> /etc/environment &&\
 	cat /etc/environment &&\
 	apt-get update &&\
@@ -35,7 +35,7 @@ RUN --mount=type=bind,from=mlocati/php-extension-installer:latest,source=/usr/bi
  	rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/* cache/* /var/lib/log/* &&\
 	echo "max_input_vars=5000" > ${PHP_INI_DIR}/conf.d/moodle.ini
 
-ARG VERSION=311
+ARG VERSION=502
 RUN	echo "Installing moodle ${VERSION}" && \
 	cd /usr/src &&\ 
 	curl -s -N  https://packaging.moodle.org/stable${VERSION}/moodle-latest-${VERSION}.tgz | tar -xvz && \
@@ -54,19 +54,6 @@ RUN chown root:root /usr/local/bin/entrypoint.sh &&\
 ENTRYPOINT ["/usr/local/bin/entrypoint.sh"]
 CMD [ "/usr/sbin/apache2ctl", "-D", "FOREGROUND"]
 
-FROM base AS multibase
-
-ENV MOODLE_DB_TYPE='all'
-
-RUN --mount=type=bind,from=mlocati/php-extension-installer:latest,source=/usr/bin/install-php-extensions,target=/usr/local/bin/install-php-extensions \
-	/usr/local/bin/install-php-extensions mysqli pdo_mysql pgsql pdo_pgsql &&\
-	php -i | grep extension_dir  | cut -d " " -f 5 &&\
-	ls -l /usr/local/etc/php/conf.d/ &&\
-	apt-get autopurge -y &&\
-	apt-get autoremove -y &&\
-	apt-get autoclean &&\
-	rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/* cache/* /var/lib/log/*
-
 FROM base AS mysql_maria
 
 ENV MOODLE_DB_TYPE='mysqli'
@@ -76,23 +63,6 @@ RUN echo 'mysqli' > /etc/db_type;
 ARG CACHEBUST=0
 RUN --mount=type=bind,from=mlocati/php-extension-installer:latest,source=/usr/bin/install-php-extensions,target=/usr/local/bin/install-php-extensions \
 	/usr/local/bin/install-php-extensions mysqli pdo_mysql &&\
-	php -i | grep extension_dir  | cut -d " " -f 5 &&\
-	ls -l /usr/local/etc/php/conf.d/ &&\
-	apt-get autopurge -y &&\
-	apt-get autoremove -y &&\
-	apt-get autoclean &&\
-	rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/* cache/* /var/lib/log/*
-
-
-FROM base AS postgres
-
-ENV MOODLE_DB_TYPE='pgsql'
-RUN echo 'pgsql' > /etc/db_type;
-
-# Use the argument CACHEBUST to disable caching during build bellow. This contains the build number.
-ARG CACHEBUST=0
-RUN --mount=type=bind,from=mlocati/php-extension-installer:latest,source=/usr/bin/install-php-extensions,target=/usr/local/bin/install-php-extensions \
-	/usr/local/bin/install-php-extensions pgsql pdo_pgsql &&\
 	php -i | grep extension_dir  | cut -d " " -f 5 &&\
 	ls -l /usr/local/etc/php/conf.d/ &&\
 	apt-get autopurge -y &&\
