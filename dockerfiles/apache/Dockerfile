@@ -50,8 +50,9 @@ RUN	echo "Installing moodle ${VERSION}" && \
 COPY ./scripts/moodle-config.php /usr/src/moodle/config.php
 COPY ./scripts/entrypoint.sh /usr/local/bin/entrypoint.sh
 
-RUN chown root:root /usr/local/bin/entrypoint.sh &&\
-	chmod +x /usr/local/bin/entrypoint.sh
+# chown root:root /usr/local/bin/entrypoint.sh &&\
+	
+RUN chmod +x /usr/local/bin/entrypoint.sh
 
 ENTRYPOINT ["/usr/local/bin/entrypoint.sh"]
 CMD [ "/usr/sbin/apache2ctl", "-D", "FOREGROUND"]
